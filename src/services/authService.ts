@@ -1,60 +1,57 @@
-// src/services/authService.ts
+// AuthService.js
 
-export class AuthService {
-    // Method for user registration
-    register(email: string, password: string): Promise<void> {
-        // Registration logic here
-        return new Promise((resolve, reject) => {
-            // Simulate registration
-            if (email && password) {
-                // Save user info to database
-                resolve();
-            } else {
-                reject('Invalid email or password');
+class AuthService {
+    constructor() {
+        this.tokenKey = 'jwt_token';
+    }
+
+    register(username, password) {
+        // Send a request to register the user
+        return fetch('/api/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        }).then(response => response.json());
+    }
+
+    login(username, password) {
+        // Send a login request
+        return fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        }).then(response => response.json()).then(data => {
+            if (data.token) {
+                this.setToken(data.token);
             }
+            return data;
         });
     }
 
-    // Method for user login
-    login(email: string, password: string): Promise<string> {
-        // Login logic here
-        return new Promise((resolve, reject) => {
-            // Simulate login
-            if (email === 'user@example.com' && password === 'password') {
-                // Generate a session token
-                const sessionToken = 'unique-session-token';
-                resolve(sessionToken);
-            } else {
-                reject('Invalid email or password');
-            }
-        });
+    logout() {
+        this.setToken(null);
     }
 
-    // Method for user logout
-    logout(sessionToken: string): void {
-        // Logout logic here
-        console.log('User logged out:', sessionToken);
+    setToken(token) {
+        if (token) {
+            localStorage.setItem(this.tokenKey, token);
+        } else {
+            localStorage.removeItem(this.tokenKey);
+        }
     }
 
-    // Method to manage user session
-    getSession(sessionToken: string): Promise<any> {
-        // Session management logic here
-        return new Promise((resolve) => {
-            // Simulate session retrieval
-            resolve({ email: 'user@example.com', active: true });
-        });
+    getToken() {
+        return localStorage.getItem(this.tokenKey);
+    }
+
+    isLoggedIn() {
+        const token = this.getToken();
+        return token != null;
     }
 }
 
-// Example usage:
-const authService = new AuthService();
-
-// Registration
-authService.register('user@example.com', 'password')
-    .then(() => console.log('User registered'))
-    .catch(err => console.error(err));
-
-// Login
-authService.login('user@example.com', 'password')
-    .then(token => console.log('Logged in with token:', token))
-    .catch(err => console.error(err));
+export default new AuthService();
