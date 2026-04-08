@@ -1,70 +1,54 @@
-// gpsTrackerService.ts
+// GPS Tracker Service Implementation
 
-// Interfaces
-interface LocationCoords {
-    latitude: number;
-    longitude: number;
+// Required libraries
+const geolib = require('geolib');
+
+// Zone definitions
+const campusZones = [
+    { name: 'Recycling Hub', coords: { latitude: 40.123456, longitude: -75.123456 } },
+    { name: 'Energy Center', coords: { latitude: 40.654321, longitude: -75.654321 } },
+    { name: 'Walking Path', coords: { latitude: 40.234567, longitude: -75.234567 } },
+    { name: 'Water Station', coords: { latitude: 40.345678, longitude: -75.345678 } },
+    { name: 'Green Space', coords: { latitude: 40.456789, longitude: -75.456789 } }
+];
+
+// Location history
+let locationHistory = [];
+
+// Function to track real-time location
+function trackLocation(position) {
+    const { latitude, longitude } = position.coords;
+    locationHistory.push({ latitude, longitude, timestamp: new Date().toISOString() });
+    checkZone(latitude, longitude);
 }
 
-interface Zone {
-    name: string;
-    coords: LocationCoords;
-    auraReward: number;
+// Check for zone entry
+function checkZone(latitude, longitude) {
+    campusZones.forEach(zone => {
+        const distance = geolib.getDistance(
+            { latitude, longitude },
+            zone.coords
+        );
+        // If within 50 meters, trigger rewards
+        if (distance < 50) {
+            triggerRewards(zone.name);
+        }
+    });
 }
 
-interface ProximityEvent {
-    zone: Zone;
-    isInside: boolean;
+// Award aura rewards
+function triggerRewards(zoneName) {
+    console.log(`You have entered the ${zoneName}. Aura rewards awarded!`);
+    // Implement reward logic here
 }
 
-// GPSTrackerService Class
-class GPSTrackerService {
-    private currentLocation: LocationCoords | null = null;
-    private zones: Zone[];
-
-    constructor() {
-        this.zones = [
-            { name: 'Recycling Hub', coords: { latitude: 12.345, longitude: 67.890 }, auraReward: 10 },
-            { name: 'Energy Center', coords: { latitude: 12.346, longitude: 67.891 }, auraReward: 20 },
-            { name: 'Walking Path', coords: { latitude: 12.347, longitude: 67.892 }, auraReward: 5 },
-            { name: 'Water Station', coords: { latitude: 12.348, longitude: 67.893 }, auraReward: 15 },
-            { name: 'Green Space', coords: { latitude: 12.349, longitude: 67.894 }, auraReward: 25 }
-        ];
-    }
-
-    startTracking() {
-        // Implementation for starting tracking
-    }
-
-    stopTracking() {
-        // Implementation for stopping tracking
-    }
-
-    getCurrentLocation(): LocationCoords | null {
-        return this.currentLocation;
-    }
-
-    checkZoneProximity(): ProximityEvent[] {
-        // Implementation for checking proximity to zones
-        return [];
-    }
-
-    calculateDistance(coords1: LocationCoords, coords2: LocationCoords): number {
-        // Implementation for calculating distance
-        return 0;
-    }
-
-    onProximityChange(event: ProximityEvent) {
-        // Implementation for handling proximity changes
-    }
-
-    getNearbyZones(): Zone[] {
-        return this.zones;
-    }
-
-    requestLocationPermission() {
-        // Implementation for requesting location permission
-    }
+// Proximity event callbacks
+function setupProximityCallbacks() {
+    navigator.geolocation.watchPosition(trackLocation);
 }
 
-export { GPSTrackerService, LocationCoords, Zone, ProximityEvent };
+// Initial setup
+setupProximityCallbacks();
+
+// Export functions if needed
+module.exports = { setupProximityCallbacks, trackLocation, locationHistory };
